@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import QuizPasteArea from "@/components/QuizPasteArea";
@@ -34,14 +34,42 @@ export default function EditCoursePage() {
     slides: Slide[];
   } | null>(null);
   const [editingSlide, setEditingSlide] = useState<Slide | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [quizTimeLimit, setQuizTimeLimit] = useState(300);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fetch(`/api/courses/${id}`)
       .then((r) => r.json())
       .then((data) => setCourse(data));
   }, [id]);
+
+  useEffect(() => {
+    if (editingSlide) {
+      setEditTitle(editingSlide.title);
+      setEditContent(editingSlide.content);
+    }
+  }, [editingSlide?.id]);
+
+  const debouncedSave = useCallback(
+    (slideId: string, title: string, content: string) => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => {
+        fetch(`/api/slides/${slideId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, content }),
+        });
+      }, 800);
+    },
+    []
+  );
+
+  useEffect(() => {
+    return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
+  }, []);
 
   const addSlide = async () => {
     const res = await fetch(`/api/courses/${id}/slides`, {
@@ -57,21 +85,26 @@ export default function EditCoursePage() {
     }
   };
 
-  const updateSlide = async (slideId: string, data: Partial<Slide>) => {
-    await fetch(`/api/slides/${slideId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
+  const updateSlideLocal = (field: "title" | "content", value: string) => {
+    if (!editingSlide) return;
+    if (field === "title") setEditTitle(value);
+    else setEditContent(value);
+
     setCourse((prev) => {
       if (!prev) return prev;
       return {
         ...prev,
         slides: prev.slides.map((s) =>
-          s.id === slideId ? { ...s, ...data } : s
+          s.id === editingSlide.id ? { ...s, [field]: value } : s
         ),
       };
     });
+
+    debouncedSave(
+      editingSlide.id,
+      field === "title" ? value : editTitle,
+      field === "content" ? value : editContent
+    );
   };
 
   const deleteSlide = async (slideId: string) => {
@@ -235,9 +268,9 @@ export default function EditCoursePage() {
                   </label>
                   <input
                     type="text"
-                    value={editingSlide.title}
+                    value={editTitle}
                     onChange={(e) =>
-                      updateSlide(editingSlide.id, { title: e.target.value })
+                      updateSlideLocal("title", e.target.value)
                     }
                     className="w-full px-4 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent bg-white"
                   />
@@ -247,9 +280,9 @@ export default function EditCoursePage() {
                     Content
                   </label>
                   <textarea
-                    value={editingSlide.content}
+                    value={editContent}
                     onChange={(e) =>
-                      updateSlide(editingSlide.id, { content: e.target.value })
+                      updateSlideLocal("content", e.target.value)
                     }
                     rows={6}
                     className="w-full px-4 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent bg-white resize-y"

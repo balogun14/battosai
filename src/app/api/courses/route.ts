@@ -23,15 +23,32 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  const { title, description } = await request.json();
-  if (!title?.trim()) {
+  let body: { title?: string; description?: string };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
+  const { title, description } = body;
+
+  if (!title || typeof title !== "string" || !title.trim()) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
   }
+
+  if (title.length > 200) {
+    return NextResponse.json(
+      { error: "Title must be 200 characters or fewer" },
+      { status: 400 }
+    );
+  }
+
+  const cleanDesc = typeof description === "string" ? description.trim().slice(0, 5000) : "";
 
   const id = crypto.randomUUID();
   await db.execute({
     sql: "INSERT INTO courses (id, title, description, created_by) VALUES (?, ?, ?, ?)",
-    args: [id, title.trim(), (description || "").trim(), session.userId],
+    args: [id, title.trim(), cleanDesc, session.userId],
   });
 
   const result = await db.execute({

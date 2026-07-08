@@ -1,65 +1,68 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import Link from "next/link";
+
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  slide_count: number;
+  created_at: string;
+}
+
+export default function HomePage() {
+  const [courses, setCourses] = useState<Course[]>([]);
+
+  useEffect(() => {
+    fetch("/api/courses")
+      .then((r) => r.json())
+      .then((data) => setCourses(data.courses || []));
+  }, []);
+
+  if (courses.length === 0) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
+        <h1 className="text-xl sm:text-2xl font-semibold text-zinc-900 mb-2">
+          No courses yet
+        </h1>
+        <p className="text-zinc-500 mb-6">
+          An admin needs to create a course before you can start learning.
+        </p>
+        <Link
+          href="/admin"
+          className="inline-block px-4 py-2 text-sm bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors"
+        >
+          Go to Admin
+        </Link>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <h1 className="text-xl sm:text-2xl font-semibold text-zinc-900 mb-6 sm:mb-8">Your Courses</h1>
+      <div className="space-y-3">
+        {courses.map((course) => (
+          <Link
+            key={course.id}
+            href={`/courses/${course.id}`}
+            className="block p-4 sm:p-5 bg-white border border-zinc-200 rounded-xl hover:border-zinc-400 transition-colors"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+            <h2 className="font-medium text-zinc-900 text-sm sm:text-base">{course.title}</h2>
+            {course.description && (
+              <p className="text-sm text-zinc-500 mt-1 line-clamp-2">
+                {course.description}
+              </p>
+            )}
+            <div className="flex items-center gap-4 mt-3">
+              <span className="text-xs text-zinc-400">
+                {course.slide_count} slide{course.slide_count !== 1 ? "s" : ""}
+              </span>
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

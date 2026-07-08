@@ -12,7 +12,7 @@ function getSecret(): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
-const publicPaths = ["/login", "/api/auth/login"];
+const publicPaths = ["/login", "/api/auth/login", "/api/agent"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

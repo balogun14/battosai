@@ -10,6 +10,7 @@ const client = tursoUrl
 export const db = client;
 
 export async function initDB() {
+  await db.execute("PRAGMA foreign_keys = ON");
   await db.execute(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,

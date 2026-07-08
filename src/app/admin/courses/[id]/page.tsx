@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import QuizPasteArea from "@/components/QuizPasteArea";
 
@@ -27,7 +27,6 @@ interface QuizData {
 
 export default function EditCoursePage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
   const [course, setCourse] = useState<{
     title: string;
     description: string;

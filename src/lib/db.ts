@@ -3,34 +3,13 @@ import { createClient } from "@libsql/client";
 const tursoUrl = process.env.TURSO_DATABASE_URL;
 const tursoAuthToken = process.env.TURSO_AUTH_TOKEN;
 
-let _client: ReturnType<typeof createClient> | null = null;
+const client = tursoUrl
+  ? createClient({ url: tursoUrl, authToken: tursoAuthToken })
+  : createClient({ url: "file:local.db" });
 
-function getClient() {
-  if (_client) return _client;
-
-  if (tursoUrl) {
-    _client = createClient({ url: tursoUrl, authToken: tursoAuthToken });
-    return _client;
-  }
-
-  if (process.env.NODE_ENV === "production") {
-    console.warn(
-      "\n⚠  TURSO_DATABASE_URL is not set. " +
-      "In production (Vercel), you MUST set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN.\n" +
-      "Create a free database at https://turso.tech and add the env vars in your Vercel project.\n"
-    );
-  }
-
-  _client = createClient({ url: "file:local.db" });
-  return _client;
-}
-
-export function getDB() {
-  return getClient();
-}
+export const db = client;
 
 export async function initDB() {
-  const db = getDB();
   await db.execute(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,

@@ -15,21 +15,27 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: username.trim() }),
-    });
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username.trim() }),
+      });
 
-    if (!res.ok) {
       const data = await res.json();
-      setError(data.error || "Login failed");
-      setLoading(false);
-      return;
-    }
 
-    router.push("/");
-    router.refresh();
+      if (!res.ok) {
+        setError(data.error || "Login failed");
+        setLoading(false);
+        return;
+      }
+
+      router.push("/");
+      router.refresh();
+    } catch {
+      setError("Network error. Check your connection.");
+      setLoading(false);
+    }
   };
 
   return (

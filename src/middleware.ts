@@ -1,13 +1,13 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
 function getSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET;
   if (!secret || secret.length < 32) {
-    throw new Error(
-      "JWT_SECRET must be set and at least 32 characters."
-    );
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("JWT_SECRET missing in production.");
+    }
+    return new TextEncoder().encode("dev-secret-change-me-in-production-1234567890!!");
   }
   return new TextEncoder().encode(secret);
 }

@@ -4,10 +4,12 @@ import { cookies } from "next/headers";
 function getSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET;
   if (!secret || secret.length < 32) {
-    throw new Error(
-      "JWT_SECRET must be set and at least 32 characters. " +
-        "Generate one: openssl rand -hex 32"
-    );
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "JWT_SECRET missing or too short in production. Set it in your Vercel environment variables."
+      );
+    }
+    return new TextEncoder().encode("dev-secret-change-me-in-production-1234567890!!");
   }
   return new TextEncoder().encode(secret);
 }

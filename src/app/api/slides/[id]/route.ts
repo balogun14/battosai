@@ -41,7 +41,32 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  await db.execute({ sql: "DELETE FROM slides WHERE id = ?", args: [id] });
 
-  return NextResponse.json({ success: true });
+  try {
+    const quiz = await db
+      .execute({ sql: "SELECT id FROM quizzes WHERE slide_id = ?", args: [id] })
+      .then((r) => r.rows[0]);
+
+    if (quiz) {
+      await db.execute({
+        sql: "DELETE FROM progress WHERE quiz_id = ?",
+        args: [quiz.id],
+      });
+      await db.execute({
+        sql: "DELETE FROM quiz_questions WHERE quiz_id = ?",
+        args: [quiz.id],
+      });
+      await db.execute({
+        sql: "DELETE FROM quizzes WHERE id = ?",
+        args: [quiz.id],
+      });
+    }
+
+    await db.execute({ sql: "DELETE FROM slides WHERE id = ?", args: [id] });
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("Delete slide failed:", err);
+    return NextResponse.json({ error: "Delete failed" }, { status: 500 });
+  }
 }

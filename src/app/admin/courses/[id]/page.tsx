@@ -168,7 +168,7 @@ export default function EditCoursePage() {
   if (!course) {
     return (
       <div className="max-w-4xl mx-auto px-6 py-12">
-        <p className="text-zinc-500">Loading...</p>
+        <p className="text-ink-faint">Loading...</p>
       </div>
     );
   }
@@ -178,15 +178,15 @@ export default function EditCoursePage() {
       <div className="flex items-center gap-4 mb-6 sm:mb-8">
         <Link
           href="/admin"
-          className="text-sm text-zinc-400 hover:text-zinc-600 transition-colors shrink-0"
+          className="text-sm text-ink-faint hover:text-ink transition-colors shrink-0"
         >
           &larr; Admin
         </Link>
-        <h1 className="text-xl sm:text-2xl font-semibold text-zinc-900 truncate">{course.title}</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold text-ink truncate">{course.title}</h1>
       </div>
 
       <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 lg:hidden">
-        <span className="text-xs text-zinc-400 shrink-0 mr-1">Slides:</span>
+        <span className="text-xs text-ink-faint shrink-0 mr-1">Slides:</span>
         {course.slides.map((slide) => (
           <button
             key={slide.id}
@@ -197,7 +197,7 @@ export default function EditCoursePage() {
             className={`shrink-0 px-2.5 py-1 rounded-md text-xs transition-colors ${
               editingSlide?.id === slide.id
                 ? "bg-zinc-900 text-white"
-                : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                : "bg-line/50 text-ink-soft hover:bg-line"
             }`}
           >
             {slide.order_num + 1}. {slide.title}
@@ -205,7 +205,7 @@ export default function EditCoursePage() {
         ))}
         <button
           onClick={addSlide}
-          className="shrink-0 px-2.5 py-1 rounded-md text-xs border border-dashed border-zinc-300 text-zinc-400 hover:text-zinc-600 hover:border-zinc-400 transition-colors"
+          className="shrink-0 px-2.5 py-1 rounded-md text-xs border border-dashed border-line-strong text-ink-faint hover:text-ink-soft hover:border-zinc-400 transition-colors"
         >
           + Add
         </button>
@@ -214,10 +214,10 @@ export default function EditCoursePage() {
       <div className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8">
         <div className="hidden lg:block space-y-1">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-medium text-zinc-700">Slides</h2>
+            <h2 className="text-sm font-medium text-ink-soft">Slides</h2>
             <button
               onClick={addSlide}
-              className="text-xs text-zinc-500 hover:text-zinc-900 transition-colors"
+              className="text-xs text-ink-soft hover:text-ink transition-colors"
             >
               + Add
             </button>
@@ -231,18 +231,18 @@ export default function EditCoursePage() {
               }}
               className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
                 editingSlide?.id === slide.id
-                  ? "bg-zinc-100 text-zinc-900"
-                  : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
+                  ? "bg-line/50 text-ink"
+                  : "text-ink-soft hover:bg-paper hover:text-ink"
               }`}
             >
-              <span className="text-xs text-zinc-400 mr-1 font-mono">
+              <span className="text-xs text-ink-faint mr-1 font-mono">
                 {slide.order_num + 1}.
               </span>
               {slide.title}
             </button>
           ))}
           {course.slides.length === 0 && (
-            <p className="text-sm text-zinc-400 px-3 py-4">No slides yet. Click + Add to create one.</p>
+            <p className="text-sm text-ink-faint px-3 py-4">No slides yet. Click + Add to create one.</p>
           )}
         </div>
 
@@ -251,18 +251,18 @@ export default function EditCoursePage() {
             <div className="space-y-8">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium text-zinc-900">
+                  <h3 className="text-lg font-medium text-ink">
                     Slide Content
                   </h3>
                   <button
                     onClick={() => deleteSlide(editingSlide.id)}
-                    className="text-xs text-red-500 hover:text-red-700 transition-colors"
+                    className="text-xs text-red-700 hover:text-red-800 transition-colors"
                   >
                     Delete Slide
                   </button>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">
+                  <label className="eyebrow block mb-2">
                     Title
                   </label>
                   <input
@@ -271,11 +271,11 @@ export default function EditCoursePage() {
                     onChange={(e) =>
                       updateSlideLocal("title", e.target.value)
                     }
-                    className="w-full px-4 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent bg-white"
+                    className="field"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">
+                  <label className="eyebrow block mb-2">
                     Content
                   </label>
                   <textarea
@@ -284,19 +284,19 @@ export default function EditCoursePage() {
                       updateSlideLocal("content", e.target.value)
                     }
                     rows={6}
-                    className="w-full px-4 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent bg-white resize-y"
+                    className="field resize-y"
                   />
                 </div>
               </div>
 
-              <div className="border-t border-zinc-200 pt-8 space-y-4">
-                <h3 className="text-lg font-medium text-zinc-900">
+              <div className="border-t border-line pt-8 space-y-4">
+                <h3 className="text-lg font-medium text-ink">
                   Quiz Questions
                 </h3>
 
                 <div className="flex items-center gap-4">
                   <div>
-                    <label className="block text-xs text-zinc-500 mb-1">
+                    <label className="block text-xs text-ink-faint mb-1">
                       Time Limit (seconds)
                     </label>
                     <input
@@ -305,12 +305,12 @@ export default function EditCoursePage() {
                       onChange={(e) =>
                         setQuizTimeLimit(Number(e.target.value))
                       }
-                      className="w-24 px-3 py-1.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent bg-white"
+                      className="w-24 px-3 py-1.5 text-sm border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent bg-card"
                     />
                   </div>
                   <button
                     onClick={saveQuiz}
-                    className="px-4 py-1.5 text-sm bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors mt-auto"
+                    className="px-4 py-1.5 text-sm btn-primary mt-auto"
                   >
                     Save Quiz
                   </button>
@@ -320,7 +320,7 @@ export default function EditCoursePage() {
 
                 {quizData && quizData.questions.length > 0 && (
                   <div className="space-y-4 mt-4">
-                    <p className="text-sm text-zinc-500">
+                    <p className="text-sm text-ink-faint">
                       {quizData.questions.length} question
                       {quizData.questions.length !== 1 ? "s" : ""}
                     </p>
@@ -328,11 +328,11 @@ export default function EditCoursePage() {
                       {quizData.questions.map((q, i) => (
                         <div
                           key={q.id}
-                          className="p-4 border border-zinc-200 rounded-lg bg-white"
+                          className="p-4 border border-line rounded-lg bg-card"
                         >
                           <div className="flex items-start justify-between">
-                            <p className="text-sm font-medium text-zinc-900">
-                              <span className="text-zinc-400 mr-1">
+                            <p className="text-sm font-medium text-ink">
+                              <span className="text-ink-faint mr-1">
                                 {i + 1}.
                               </span>
                               {q.question_text}
@@ -351,7 +351,7 @@ export default function EditCoursePage() {
                                 className={`px-2 py-0.5 text-xs rounded font-mono ${
                                   opt === q.correct_answer
                                     ? "bg-emerald-100 text-emerald-700"
-                                    : "bg-zinc-100 text-zinc-500"
+                                    : "bg-line/50 text-ink-faint"
                                 }`}
                               >
                                 {opt}
@@ -359,7 +359,7 @@ export default function EditCoursePage() {
                             ))}
                           </div>
                           {q.explanation && (
-                            <p className="text-xs text-zinc-400 mt-2 italic">
+                            <p className="text-xs text-ink-faint mt-2 italic">
                               {q.explanation}
                             </p>
                           )}
@@ -371,7 +371,7 @@ export default function EditCoursePage() {
               </div>
             </div>
           ) : (
-            <div className="text-center py-16 text-zinc-400">
+            <div className="text-center py-16 text-ink-faint">
               <p>Select a slide to edit</p>
             </div>
           )}

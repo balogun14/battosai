@@ -127,6 +127,13 @@ export async function GET(
     }
   } else if (game.status === "ended") {
     payload.leaderboard = buildLeaderboard(players);
+    if (me) {
+      payload.me = {
+        nickname: me.nickname,
+        score: me.score,
+        rank: buildLeaderboard(players).find((r) => r.nickname === me.nickname)?.rank ?? null,
+      };
+    }
   }
 
   return NextResponse.json(payload);

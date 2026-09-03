@@ -162,8 +162,10 @@ export default function CourseViewPage() {
 
   if (!course) {
     return (
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
-        <p className="text-zinc-500">Loading...</p>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 space-y-4">
+        <div className="skeleton h-8 w-1/3" />
+        <div className="skeleton h-4 w-1/2" />
+        <div className="skeleton h-40 w-full mt-6" />
       </div>
     );
   }
@@ -176,7 +178,8 @@ export default function CourseViewPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-      <h1 className="text-xl sm:text-2xl font-semibold text-zinc-900 mb-6">
+      <p className="eyebrow mb-2">Course</p>
+      <h1 className="display text-2xl sm:text-3xl text-ink mb-6 sm:mb-8">
         {course.title}
       </h1>
 
@@ -185,12 +188,13 @@ export default function CourseViewPage() {
           <button
             key={slide.id}
             onClick={() => setCurrentSlideIdx(i)}
-            className={`shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full text-xs font-mono flex items-center justify-center transition-colors ${
+            aria-label={`Slide ${i + 1}`}
+            className={`shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full text-xs font-mono flex items-center justify-center transition-all duration-200 ${
               i === currentSlideIdx
-                ? "bg-zinc-900 text-white"
+                ? "bg-accent text-white shadow-[0_2px_8px_rgba(45,90,58,0.35)]"
                 : i < currentSlideIdx
-                ? "bg-zinc-200 text-zinc-500"
-                : "bg-zinc-100 text-zinc-400"
+                ? "bg-accent-soft text-accent-deep"
+                : "bg-line/60 text-ink-faint hover:bg-line"
             }`}
           >
             {i + 1}
@@ -201,24 +205,28 @@ export default function CourseViewPage() {
       {currentSlide && (
         <div className="space-y-8 sm:space-y-10">
           <div>
-            <h2 className="text-base sm:text-lg font-medium text-zinc-900 mb-3 sm:mb-4">
+            <h2 className="text-base sm:text-lg font-medium text-ink mb-3 sm:mb-4">
               {currentSlide.title}
             </h2>
             {currentSlide.content && (
-              <div className="prose prose-sm text-zinc-600 max-w-none whitespace-pre-wrap">
+              <div className="prose prose-sm prose-copy whitespace-pre-wrap">
                 {currentSlide.content}
               </div>
             )}
           </div>
 
           {loadingQuiz ? (
-            <p className="text-sm text-zinc-400">Loading quiz...</p>
+            <div className="space-y-3 pt-2">
+              <div className="skeleton h-4 w-24" />
+              <div className="skeleton h-11 w-full" />
+              <div className="skeleton h-11 w-full" />
+            </div>
           ) : quiz && quiz.questions.length > 0 ? (
-            <div className="border-t border-zinc-200 pt-6 sm:pt-8 space-y-4 sm:space-y-6">
+            <div className="border-t border-line pt-6 sm:pt-8 space-y-4 sm:space-y-6">
               {/* Header with timer and progress */}
               <div className="flex items-center justify-between">
-                <h3 className="text-base sm:text-lg font-medium text-zinc-900">
-                  Quiz
+                <h3 className="display text-lg sm:text-xl text-ink">
+                  Knowledge check
                 </h3>
                 {quizStarted && !quizDone && (
                   <QuizTimer
@@ -231,24 +239,24 @@ export default function CourseViewPage() {
 
               {/* Previous attempt summary */}
               {previousAttempt && !quizStarted && !viewingAttempt && (
-                <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-lg space-y-2">
-                  <p className="text-sm text-zinc-600">
+                <div className="p-4 bg-accent-soft/60 border border-line rounded-lg space-y-2">
+                  <p className="text-sm text-ink-soft">
                     Previous attempt:{" "}
-                    <span className="font-medium">
+                    <span className="font-medium tabular-nums">
                       {previousAttempt.score}/{previousAttempt.total}
                     </span>
                     {previousAttempt.total > 0 && (
-                      <span className="text-zinc-400 ml-1">
+                      <span className="text-ink-faint ml-1">
                         ({Math.round((previousAttempt.score / previousAttempt.total) * 100)}%)
                       </span>
                     )}
                   </p>
-                  <p className="text-xs text-zinc-400">
+                  <p className="text-xs text-ink-faint">
                     Time: {previousAttempt.time_spent_seconds}s
                   </p>
                   <button
                     onClick={() => setViewingAttempt(true)}
-                    className="text-xs text-zinc-600 hover:text-zinc-900 underline underline-offset-2"
+                    className="text-xs text-accent hover:text-accent-deep underline underline-offset-2 transition-colors"
                   >
                     View your answers
                   </button>
@@ -263,8 +271,8 @@ export default function CourseViewPage() {
                     const isCorrect = userAnswer === q.correct_answer;
                     return (
                       <div key={q.id} className="space-y-3">
-                        <h4 className="text-sm font-medium text-zinc-900">
-                          <span className="text-zinc-400 font-mono text-xs mr-1">
+                        <h4 className="text-sm font-medium text-ink">
+                          <span className="text-ink-faint font-mono text-xs mr-1">
                             {i + 1}.
                           </span>
                           {q.question_text}
@@ -274,13 +282,13 @@ export default function CourseViewPage() {
                             const chosen = userAnswer === opt;
                             const correct = opt === q.correct_answer;
                             let cls =
-                              "w-full text-left px-3 py-2 rounded-md text-sm ";
+                              "w-full text-left px-3 py-2 rounded-md text-sm transition-colors ";
                             if (correct) {
                               cls += "bg-emerald-50 border border-emerald-200 text-emerald-800 ";
                             } else if (chosen && !correct) {
                               cls += "bg-red-50 border border-red-200 text-red-800 ";
                             } else {
-                              cls += "text-zinc-400 ";
+                              cls += "text-ink-faint ";
                             }
                             return (
                               <div key={opt} className={cls}>
@@ -298,7 +306,7 @@ export default function CourseViewPage() {
                           })}
                         </div>
                         {q.explanation && (
-                          <p className="text-xs text-zinc-400 bg-zinc-50 rounded-md p-3">
+                          <p className="text-xs text-ink-soft bg-paper rounded-md p-3 border border-line/60">
                             {q.explanation}
                           </p>
                         )}
@@ -308,15 +316,12 @@ export default function CourseViewPage() {
                   <div className="flex items-center gap-4">
                     <button
                       onClick={() => setViewingAttempt(false)}
-                      className="text-sm text-zinc-600 hover:text-zinc-900 underline underline-offset-2"
+                      className="text-sm text-ink-soft hover:text-ink underline underline-offset-2 transition-colors"
                     >
                       Hide answers
                     </button>
-                    <button
-                      onClick={startQuiz}
-                      className="px-5 py-2 text-sm bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors"
-                    >
-                      Retake Quiz
+                    <button onClick={startQuiz} className="btn-primary">
+                      Retake quiz
                     </button>
                   </div>
                 </div>
@@ -325,19 +330,19 @@ export default function CourseViewPage() {
               {/* Quiz done: results summary */}
               {quizDone && !viewingAttempt && (
                 <div className="space-y-6">
-                  <div className="p-5 bg-zinc-50 border border-zinc-200 rounded-xl text-center">
-                    <p className="text-lg font-semibold text-zinc-900">
+                  <div className="p-6 bg-accent-soft/60 border border-line rounded-xl text-center">
+                    <p className="display text-2xl text-ink">
                       {score}/{totalQuestions} correct
                       {totalQuestions > 0 &&
                         ` · ${Math.round((score / totalQuestions) * 100)}%`}
                     </p>
-                    <p className="text-xs text-zinc-400 mt-1">
+                    <p className="text-xs text-ink-faint mt-1.5">
                       {score === totalQuestions
-                        ? "Perfect!"
+                        ? "Perfect score."
                         : score >= totalQuestions * 0.7
-                        ? "Great job!"
+                        ? "Strong run."
                         : score >= totalQuestions * 0.5
-                        ? "Keep going!"
+                        ? "Halfway there — keep going."
                         : "You'll get it next time."}
                     </p>
                   </div>
@@ -351,20 +356,20 @@ export default function CourseViewPage() {
                           key={q.id}
                           className={`p-4 rounded-lg border ${
                             isCorrect
-                              ? "border-emerald-200 bg-emerald-50/50"
-                              : "border-red-200 bg-red-50/50"
+                              ? "border-emerald-200 bg-emerald-50/40"
+                              : "border-red-200 bg-red-50/40"
                           }`}
                         >
                           <div className="flex items-start gap-2">
-                            <span className="font-mono text-xs mt-0.5 shrink-0 text-zinc-500">
+                            <span className="font-mono text-xs mt-0.5 shrink-0 text-ink-faint">
                               {i + 1}.
                             </span>
                             <div className="space-y-2 min-w-0">
-                              <p className="text-sm font-medium text-zinc-900">
+                              <p className="text-sm font-medium text-ink">
                                 {q.question_text}
                               </p>
                               <p className="text-xs">
-                                <span className="text-zinc-400">
+                                <span className="text-ink-faint">
                                   Your answer:{" "}
                                 </span>
                                 <span
@@ -379,7 +384,7 @@ export default function CourseViewPage() {
                               </p>
                               {!isCorrect && (
                                 <p className="text-xs">
-                                  <span className="text-zinc-400">
+                                  <span className="text-ink-faint">
                                     Correct:{" "}
                                   </span>
                                   <span className="text-emerald-700">
@@ -388,7 +393,7 @@ export default function CourseViewPage() {
                                 </p>
                               )}
                               {q.explanation && (
-                                <p className="text-xs text-zinc-500 bg-white rounded p-2.5">
+                                <p className="text-xs text-ink-soft bg-card rounded p-2.5 border border-line/60">
                                   {q.explanation}
                                 </p>
                               )}
@@ -399,11 +404,8 @@ export default function CourseViewPage() {
                     })}
                   </div>
 
-                  <button
-                    onClick={startQuiz}
-                    className="px-6 py-2.5 text-sm bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors"
-                  >
-                    Retake Quiz
+                  <button onClick={startQuiz} className="btn-primary">
+                    Retake quiz
                   </button>
                 </div>
               )}
@@ -411,13 +413,13 @@ export default function CourseViewPage() {
               {/* Step-wise quiz */}
               {quizStarted && !quizDone && currentQ && !viewingAttempt && (
                 <div className="space-y-5">
-                  <div className="flex items-center gap-2 text-xs text-zinc-400 mb-1">
-                    <span>
+                  <div className="flex items-center gap-2 text-xs text-ink-faint mb-1">
+                    <span className="tabular-nums">
                       Question {quizStep + 1} of {totalQuestions}
                     </span>
-                    <div className="flex-1 h-1 bg-zinc-100 rounded-full overflow-hidden">
+                    <div className="flex-1 h-1 bg-line/70 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-zinc-300 rounded-full transition-all duration-300"
+                        className="h-full bg-accent rounded-full transition-all duration-300"
                         style={{
                           width: `${((quizStep + 1) / totalQuestions) * 100}%`,
                         }}
@@ -425,7 +427,7 @@ export default function CourseViewPage() {
                     </div>
                   </div>
 
-                  <h4 className="text-base font-medium text-zinc-900">
+                  <h4 className="text-base sm:text-lg font-medium text-ink text-balance">
                     {currentQ.question_text}
                   </h4>
 
@@ -434,7 +436,7 @@ export default function CourseViewPage() {
                       const isSelected = selectedAnswer === opt;
                       const isCorrect = opt === currentQ.correct_answer;
                       let cls =
-                        "w-full text-left px-4 py-3 rounded-lg border text-sm transition-all ";
+                        "w-full text-left px-4 py-3 rounded-lg border text-sm transition-all duration-200 active:scale-[0.995] ";
 
                       if (revealed) {
                         if (isCorrect) {
@@ -443,12 +445,12 @@ export default function CourseViewPage() {
                         } else if (isSelected && !isCorrect) {
                           cls += "bg-red-50 border-red-300 text-red-800 ";
                         } else {
-                          cls += "border-zinc-100 text-zinc-300 opacity-50 ";
+                          cls += "border-line/60 text-ink-faint opacity-60 ";
                         }
                       } else {
                         cls += isSelected
-                          ? "border-zinc-900 bg-zinc-50 text-zinc-900 "
-                          : "border-zinc-200 hover:border-zinc-400 text-zinc-700 ";
+                          ? "border-accent bg-accent-soft text-ink shadow-[0_0_0_1px_var(--color-accent)]"
+                          : "border-line-strong hover:border-accent/60 text-ink-soft hover:text-ink ";
                       }
 
                       return (
@@ -478,7 +480,7 @@ export default function CourseViewPage() {
                   </div>
 
                   {revealed && currentQ.explanation && (
-                    <div className="p-3.5 bg-zinc-50 rounded-lg text-sm text-zinc-600">
+                    <div className="p-3.5 bg-paper border border-line/60 rounded-lg text-sm text-ink-soft">
                       {currentQ.explanation}
                     </div>
                   )}
@@ -487,16 +489,13 @@ export default function CourseViewPage() {
                     <button
                       onClick={checkAnswer}
                       disabled={!selectedAnswer}
-                      className="px-6 py-2.5 text-sm bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-40"
+                      className="btn-primary"
                     >
-                      Check Answer
+                      Check answer
                     </button>
                   ) : quizStep < totalQuestions - 1 ? (
-                    <button
-                      onClick={nextQuestion}
-                      className="px-6 py-2.5 text-sm bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors"
-                    >
-                      Next Question
+                    <button onClick={nextQuestion} className="btn-primary">
+                      Next question
                     </button>
                   ) : null}
                 </div>
@@ -504,41 +503,38 @@ export default function CourseViewPage() {
 
               {/* Start button */}
               {!quizStarted && !quizDone && !viewingAttempt && (
-                <button
-                  onClick={startQuiz}
-                  className="px-6 py-2.5 text-sm bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors"
-                >
-                  {previousAttempt ? "Retake Quiz" : "Start Quiz"}
+                <button onClick={startQuiz} className="btn-primary">
+                  {previousAttempt ? "Retake quiz" : "Start quiz"}
                 </button>
               )}
             </div>
           ) : (
-            <p className="text-sm text-zinc-400">No quiz for this slide.</p>
+            <p className="text-sm text-ink-faint">No quiz for this slide.</p>
           )}
 
           {/* Slide navigation */}
-          <div className="flex items-center justify-between pt-8 border-t border-zinc-200">
+          <div className="flex items-center justify-between pt-8 border-t border-line">
             <button
               onClick={() => setCurrentSlideIdx((i) => Math.max(0, i - 1))}
               disabled={currentSlideIdx === 0}
-              className="px-4 py-2 text-sm text-zinc-600 hover:text-zinc-900 disabled:opacity-30 transition-colors"
+              className="btn-ghost disabled:opacity-30"
             >
               &larr; Previous
             </button>
-            <span className="text-xs text-zinc-400">
+            <span className="text-xs text-ink-faint font-mono tabular-nums">
               {currentSlideIdx + 1} / {course.slides.length}
             </span>
             {isLastSlide ? (
               <button
                 onClick={() => router.push("/progress")}
-                className="px-4 py-2 text-sm bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors"
+                className="btn-primary"
               >
-                Finish Course
+                Finish course
               </button>
             ) : (
               <button
                 onClick={() => setCurrentSlideIdx((i) => i + 1)}
-                className="px-4 py-2 text-sm text-zinc-600 hover:text-zinc-900 transition-colors"
+                className="btn-ghost"
               >
                 Next &rarr;
               </button>

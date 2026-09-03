@@ -56,33 +56,35 @@ export default function PlayPage() {
   const selectedCourse = courses.find((c) => c.id === selected);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-      <div className="flex items-center justify-between mb-6 sm:mb-8">
-        <h1 className="text-xl sm:text-2xl font-semibold text-zinc-900">Host a live game</h1>
-        <Link
-          href="/admin/games"
-          className="px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors text-zinc-600"
-        >
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+      <p className="eyebrow mb-2">Live game</p>
+      <div className="flex items-end justify-between gap-4 flex-wrap mb-8 sm:mb-10">
+        <h1 className="display text-3xl sm:text-4xl text-ink">Host a game</h1>
+        <Link href="/admin/games" className="btn-ghost">
           Game history
         </Link>
       </div>
 
-      <div className="bg-white border border-zinc-200 rounded-xl p-5 space-y-5">
+      <div className="card p-6 sm:p-7 space-y-6">
         <div>
-          <label className="block text-sm font-medium text-zinc-700 mb-2">Course</label>
+          <label htmlFor="course" className="eyebrow block mb-2.5">
+            Course
+          </label>
           {courses.length === 0 ? (
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-ink-soft">
               No courses yet — create one with quiz questions first.
             </p>
           ) : (
             <select
+              id="course"
               value={selected}
               onChange={(e) => setSelected(e.target.value)}
-              className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-zinc-900"
+              className="field"
             >
               {courses.map((c) => (
                 <option key={c.id} value={c.id} disabled={c.question_count === 0}>
-                  {c.title} ({c.question_count} question{c.question_count !== 1 ? "s" : ""})
+                  {c.title} ({c.question_count} question
+                  {c.question_count !== 1 ? "s" : ""})
                 </option>
               ))}
             </select>
@@ -90,18 +92,16 @@ export default function PlayPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-700 mb-2">
-            Time limit per question
-          </label>
+          <span className="eyebrow block mb-2.5">Time limit per question</span>
           <div className="flex flex-wrap gap-2">
             {TIME_OPTIONS.map((t) => (
               <button
                 key={t}
                 onClick={() => setTimeLimit(t)}
-                className={`px-4 py-2 text-sm rounded-lg border transition-colors ${
+                className={`px-4 py-2 text-sm rounded-lg border transition-all duration-200 active:scale-95 ${
                   timeLimit === t
-                    ? "bg-zinc-900 text-white border-zinc-900"
-                    : "bg-white text-zinc-600 border-zinc-200 hover:border-zinc-400"
+                    ? "bg-accent text-white border-accent shadow-[0_2px_8px_rgba(45,90,58,0.3)]"
+                    : "bg-card text-ink-soft border-line-strong hover:border-accent/60 hover:text-ink"
                 }`}
               >
                 {t}s
@@ -110,20 +110,24 @@ export default function PlayPage() {
           </div>
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && (
+          <p className="text-sm text-red-800 bg-red-50 border border-red-200 rounded-lg px-3 py-2.5">
+            {error}
+          </p>
+        )}
 
         <button
           onClick={createGame}
           disabled={!selected || creating || (selectedCourse?.question_count ?? 0) === 0}
-          className="w-full py-3 rounded-lg bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800 transition-colors disabled:opacity-40"
+          className="btn-primary w-full py-3"
         >
           {creating ? "Creating…" : "Create game"}
         </button>
       </div>
 
-      <p className="text-xs text-zinc-400 mt-4">
-        Players join at <span className="font-mono">/join</span> with the game PIN — no account
-        needed.
+      <p className="text-xs text-ink-faint mt-5">
+        Players join at <span className="font-mono">/join</span> with the game
+        PIN — no account needed.
       </p>
     </div>
   );

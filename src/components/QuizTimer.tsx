@@ -49,17 +49,17 @@ export default function QuizTimer({
 
   return (
     <div className="flex items-center gap-3">
-      <div className="h-1 w-24 bg-zinc-100 rounded-full overflow-hidden">
+      <div className="h-1 w-24 bg-line/70 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-1000 ${
-            urgent ? "bg-red-500" : "bg-zinc-800"
+            urgent ? "bg-red-500" : "bg-accent"
           }`}
           style={{ width: `${pct}%` }}
         />
       </div>
       <span
         className={`font-mono text-sm tabular-nums ${
-          urgent ? "text-red-600" : "text-zinc-500"
+          urgent ? "text-red-600" : "text-ink-soft"
         }`}
       >
         {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}

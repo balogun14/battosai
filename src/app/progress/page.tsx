@@ -22,9 +22,19 @@ interface Stats {
   totalCourses: number;
 }
 
+function Stat({ value, label }: { value: number | string; label: string }) {
+  return (
+    <div>
+      <p className="display text-3xl sm:text-4xl text-ink tabular-nums">{value}</p>
+      <p className="eyebrow mt-1.5">{label}</p>
+    </div>
+  );
+}
+
 export default function ProgressPage() {
   const [progress, setProgress] = useState<ProgressItem[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     fetch("/api/progress")
@@ -32,80 +42,122 @@ export default function ProgressPage() {
       .then((data) => {
         setProgress(data.progress || []);
         setStats(data.stats || null);
+        setLoaded(true);
       });
   }, []);
 
+  const completion =
+    stats && stats.totalQuizzes > 0
+      ? Math.round((stats.quizzesCompleted / stats.totalQuizzes) * 100)
+      : 0;
+
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-      <h1 className="text-xl sm:text-2xl font-semibold text-zinc-900 mb-6 sm:mb-8">
-        Your Progress
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+      <p className="eyebrow mb-2">Your learning</p>
+      <h1 className="display text-3xl sm:text-4xl text-ink mb-8 sm:mb-10">
+        Progress
       </h1>
 
-      {stats && (
-        <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-8 sm:mb-10">
-          <div className="p-3 sm:p-4 bg-white border border-zinc-200 rounded-xl">
-            <p className="text-lg sm:text-2xl font-semibold text-zinc-900">
-              {stats.quizzesCompleted}
-            </p>
-            <p className="text-xs text-zinc-500 mt-1">Quizzes Done</p>
-          </div>
-          <div className="p-3 sm:p-4 bg-white border border-zinc-200 rounded-xl">
-            <p className="text-lg sm:text-2xl font-semibold text-zinc-900">
-              {stats.totalQuizzes}
-            </p>
-            <p className="text-xs text-zinc-500 mt-1">Total Quizzes</p>
-          </div>
-          <div className="p-3 sm:p-4 bg-white border border-zinc-200 rounded-xl">
-            <p className="text-lg sm:text-2xl font-semibold text-zinc-900">
-              {stats.totalCourses}
-            </p>
-            <p className="text-xs text-zinc-500 mt-1">Total Courses</p>
-          </div>
-        </div>
-      )}
-
-      {progress.length === 0 ? (
-        <div className="text-center py-16 border border-dashed border-zinc-300 rounded-xl">
-          <p className="text-zinc-500 mb-3">No quiz attempts yet</p>
-          <Link
-            href="/courses"
-            className="inline-block px-4 py-2 text-sm bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors"
-          >
-            Browse Courses
-          </Link>
+      {!loaded ? (
+        <div className="space-y-3">
+          <div className="skeleton h-20 w-full" />
+          <div className="skeleton h-16 w-full" />
+          <div className="skeleton h-16 w-full" />
         </div>
       ) : (
-        <div className="space-y-2 sm:space-y-3">
-          {progress.map((item) => (
-            <Link
-              key={item.id}
-              href={`/courses/${item.course_id}?review=true&slide=${item.slide_order}`}
-              className="flex items-center justify-between gap-3 p-4 sm:p-5 bg-white border border-zinc-200 rounded-xl hover:border-zinc-400 transition-colors"
-            >
-              <div className="min-w-0">
-                <h3 className="font-medium text-zinc-900 text-sm">
-                  {item.slide_title}
-                </h3>
-                <p className="text-xs text-zinc-400 mt-0.5 truncate">
-                  {item.course_title}
-                </p>
+        <>
+          {stats && (
+            <div className="card p-6 sm:p-7 mb-8 sm:mb-10">
+              <div className="flex items-start justify-between gap-6 flex-wrap">
+                <div className="flex gap-8 sm:gap-12">
+                  <Stat value={stats.quizzesCompleted} label="Quizzes done" />
+                  <Stat value={stats.totalQuizzes} label="Quizzes total" />
+                  <Stat value={stats.totalCourses} label="Courses" />
+                </div>
+                <div className="text-right">
+                  <p className="display text-3xl sm:text-4xl text-accent tabular-nums">
+                    {completion}%
+                  </p>
+                  <p className="eyebrow mt-1.5">Catalog done</p>
+                </div>
               </div>
-              <div className="text-right shrink-0">
-                <p className="text-sm font-medium text-zinc-900">
-                  {item.score}/{item.total}
-                  {item.total > 0 && (
-                    <span className="text-zinc-400 font-normal ml-1">
-                      ({Math.round((item.score / item.total) * 100)}%)
-                    </span>
-                  )}
-                </p>
-                <p className="text-xs text-zinc-400 mt-0.5">
-                  {item.time_spent_seconds}s
-                </p>
+              <div className="h-1.5 bg-line/70 rounded-full overflow-hidden mt-6">
+                <div
+                  className="h-full bg-accent rounded-full transition-all duration-700"
+                  style={{ width: `${completion}%` }}
+                />
               </div>
-            </Link>
-          ))}
-        </div>
+            </div>
+          )}
+
+          {progress.length === 0 ? (
+            <div className="card p-10 text-center">
+              <h2 className="display text-xl text-ink mb-2">No attempts yet</h2>
+              <p className="text-sm text-ink-soft mb-6 max-w-sm mx-auto">
+                Finish a quiz and your scores, timing, and completion will show
+                up here.
+              </p>
+              <Link href="/courses" className="btn-primary">
+                Browse courses
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {progress.map((item) => {
+                const pct =
+                  item.total > 0
+                    ? Math.round((item.score / item.total) * 100)
+                    : 0;
+                return (
+                  <Link
+                    key={item.id}
+                    href={`/courses/${item.course_id}?review=true&slide=${item.slide_order}`}
+                    className="card card-hover block p-4 sm:p-5"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="min-w-0">
+                        <h3 className="font-medium text-ink text-sm truncate">
+                          {item.slide_title}
+                        </h3>
+                        <p className="text-xs text-ink-faint mt-0.5 truncate">
+                          {item.course_title} · {item.time_spent_seconds}s
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-medium text-ink tabular-nums">
+                          {item.score}/{item.total}
+                          <span
+                            className={`ml-2 font-normal ${
+                              pct >= 70
+                                ? "text-accent"
+                                : pct >= 50
+                                ? "text-ink-soft"
+                                : "text-red-700"
+                            }`}
+                          >
+                            {pct}%
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="h-1 bg-line/60 rounded-full overflow-hidden mt-3">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          pct >= 70
+                            ? "bg-accent"
+                            : pct >= 50
+                            ? "bg-line-strong"
+                            : "bg-red-400"
+                        }`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

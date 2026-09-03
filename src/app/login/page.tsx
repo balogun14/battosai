@@ -40,50 +40,64 @@ function LoginForm() {
     }
   };
 
-  if (success) {
-    return (
-      <div className="flex items-center justify-center min-h-[80vh] px-4">
-        <div className="w-full max-w-sm text-center">
-          <p className="text-lg font-medium text-zinc-900 mb-1">Signed in</p>
-          <p className="text-sm text-zinc-500">Redirecting...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex items-center justify-center min-h-[80vh] px-4">
+    <div className="flex items-center justify-center min-h-[85vh] px-4">
       <div className="w-full max-w-sm">
-        <h1 className="text-xl sm:text-2xl font-semibold text-zinc-900 text-center mb-2">
-          Study Pack
-        </h1>
-        <p className="text-sm text-zinc-500 text-center mb-8">
-          Enter your username to continue
-        </p>
+        <div className="card p-7 sm:p-8">
+          <div className="flex items-baseline gap-1.5 mb-6 justify-center">
+            <span className="display text-2xl text-ink">Study Pack</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-accent mb-1" aria-hidden />
+          </div>
 
-        <form onSubmit={login} className="space-y-4">
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Your username"
-            autoFocus
-            autoComplete="username"
-            className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent bg-white"
-          />
-          {error && (
-            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-              {error}
-            </p>
+          {success ? (
+            <div className="text-center py-4">
+              <p className="text-sm font-medium text-ink mb-1">Signed in</p>
+              <p className="text-sm text-ink-faint">Taking you back…</p>
+              <div className="skeleton h-1 w-full mt-5 rounded-full" />
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-ink-soft text-center mb-7">
+                Good to see you. Enter your username to pick up where you left
+                off.
+              </p>
+
+              <form onSubmit={login} className="space-y-4">
+                <div>
+                  <label htmlFor="username" className="eyebrow block mb-2">
+                    Username
+                  </label>
+                  <input
+                    id="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Your username"
+                    autoFocus
+                    autoComplete="username"
+                    className="field"
+                  />
+                </div>
+                {error && (
+                  <p className="text-sm text-red-800 bg-red-50 border border-red-200 rounded-lg px-3 py-2.5">
+                    {error}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  disabled={loading || !username.trim()}
+                  className="btn-primary w-full py-3"
+                >
+                  {loading ? "Signing in…" : "Continue"}
+                </button>
+              </form>
+            </>
           )}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 text-sm bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50"
-          >
-            {loading ? "Signing in..." : "Continue"}
-          </button>
-        </form>
+        </div>
+
+        <p className="text-center text-xs text-ink-faint mt-5">
+          New here? Just pick a username — your account is created instantly.
+        </p>
       </div>
     </div>
   );

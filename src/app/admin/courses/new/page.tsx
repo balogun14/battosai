@@ -28,43 +28,56 @@ export default function NewCoursePage() {
   };
 
   return (
-    <div className="max-w-xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-      <h1 className="text-xl sm:text-2xl font-semibold text-zinc-900 mb-6 sm:mb-8">
-        New Course
+    <div className="max-w-xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+      <p className="eyebrow mb-2">New</p>
+      <h1 className="display text-3xl sm:text-4xl text-ink mb-8 sm:mb-10">
+        Create a course
       </h1>
-      <form onSubmit={create} className="space-y-5">
+
+      <form onSubmit={create} className="card p-6 sm:p-7 space-y-5">
         <div>
-          <label className="block text-sm font-medium text-zinc-700 mb-1.5">
+          <label htmlFor="title" className="eyebrow block mb-2">
             Title
           </label>
           <input
+            id="title"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Introduction to Python"
             autoFocus
-            className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent bg-white"
+            className="field"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-zinc-700 mb-1.5">
-            Description (optional)
+          <label htmlFor="desc" className="eyebrow block mb-2">
+            Description <span className="normal-case tracking-normal">(optional)</span>
           </label>
           <textarea
+            id="desc"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Brief description of the course..."
+            placeholder="A short summary learners will see on the course card."
             rows={3}
-            className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent bg-white resize-y"
+            className="field resize-y"
           />
         </div>
-        <button
-          type="submit"
-          disabled={saving || !title.trim()}
-          className="w-full py-2.5 text-sm bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50"
-        >
-          {saving ? "Creating..." : "Create Course"}
-        </button>
+        <div className="flex items-center gap-3 pt-1">
+          <button
+            type="submit"
+            disabled={saving || !title.trim()}
+            className="btn-primary"
+          >
+            {saving ? "Creating…" : "Create course"}
+          </button>
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="btn-ghost"
+          >
+            Cancel
+          </button>
+        </div>
       </form>
     </div>
   );

@@ -35,60 +35,68 @@ export default function AdminGamesPage() {
   }, []);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-      <div className="flex items-center justify-between mb-6 sm:mb-8">
-        <h1 className="text-xl sm:text-2xl font-semibold text-zinc-900">Game history</h1>
-        <Link
-          href="/play"
-          className="px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors"
-        >
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+      <p className="eyebrow mb-2">Live game</p>
+      <div className="flex items-end justify-between gap-4 flex-wrap mb-8 sm:mb-10">
+        <h1 className="display text-3xl sm:text-4xl text-ink">Game history</h1>
+        <Link href="/play" className="btn-primary">
           Host a game
         </Link>
       </div>
 
-      {loaded && games.length === 0 && (
-        <div className="text-center py-16 border border-dashed border-zinc-300 rounded-xl">
-          <p className="text-zinc-500 mb-4">No games hosted yet</p>
-          <Link
-            href="/play"
-            className="inline-block px-4 py-2 text-sm bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors"
-          >
+      {!loaded ? (
+        <div className="space-y-3">
+          {[0, 1].map((i) => (
+            <div key={i} className="card p-5 space-y-3">
+              <div className="skeleton h-5 w-1/3" />
+              <div className="skeleton h-3.5 w-1/2" />
+            </div>
+          ))}
+        </div>
+      ) : games.length === 0 ? (
+        <div className="card p-10 text-center">
+          <h2 className="display text-xl text-ink mb-2">No games hosted yet</h2>
+          <p className="text-sm text-ink-soft mb-6 max-w-sm mx-auto">
+            Start a live game from any course and its results will collect here.
+          </p>
+          <Link href="/play" className="btn-primary">
             Host your first game
           </Link>
         </div>
-      )}
-
-      <div className="space-y-3">
-        {games.map((g) => (
-          <Link
-            key={g.id}
-            href={`/admin/games/${g.id}`}
-            className="block p-4 sm:p-5 bg-white border border-zinc-200 rounded-xl hover:border-zinc-400 transition-colors"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <h2 className="font-medium text-zinc-900 text-sm sm:text-base truncate">
-                  {g.course_title}
-                </h2>
-                <span className="text-xs text-zinc-400 mt-1 block">
-                  PIN {g.pin} · {g.player_count} player{g.player_count !== 1 ? "s" : ""} ·{" "}
-                  {g.question_count} question{g.question_count !== 1 ? "s" : ""} ·{" "}
-                  {new Date(g.created_at).toLocaleString()}
+      ) : (
+        <div className="space-y-3">
+          {games.map((g) => (
+            <Link
+              key={g.id}
+              href={`/admin/games/${g.id}`}
+              className="card card-hover block p-4 sm:p-5 group"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="font-medium text-ink text-sm sm:text-base truncate group-hover:text-accent-deep transition-colors">
+                    {g.course_title}
+                  </h2>
+                  <span className="text-xs text-ink-faint mt-1 block tabular-nums">
+                    PIN {g.pin} · {g.player_count} player
+                    {g.player_count !== 1 ? "s" : ""} · {g.question_count} question
+                    {g.question_count !== 1 ? "s" : ""} ·{" "}
+                    {new Date(g.created_at).toLocaleString()}
+                  </span>
+                </div>
+                <span
+                  className={`shrink-0 text-xs px-2.5 py-1 rounded-full ${
+                    g.status === "ended"
+                      ? "bg-line/60 text-ink-faint"
+                      : "bg-accent-soft text-accent-deep"
+                  }`}
+                >
+                  {STATUS_LABELS[g.status] ?? g.status}
                 </span>
               </div>
-              <span
-                className={`shrink-0 text-xs px-2 py-1 rounded-full ${
-                  g.status === "ended"
-                    ? "bg-zinc-100 text-zinc-500"
-                    : "bg-green-100 text-green-700"
-                }`}
-              >
-                {STATUS_LABELS[g.status] ?? g.status}
-              </span>
-            </div>
-          </Link>
-        ))}
-      </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

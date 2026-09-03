@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, initDB } from "@/lib/db";
+import { query, initDB } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { QuizQuestion } from "@/lib/types";
 
@@ -49,11 +49,10 @@ export async function POST(request: NextRequest) {
       ? time_spent_seconds
       : 0;
 
-  const questionsResult = await db.execute({
-    sql: "SELECT * FROM quiz_questions WHERE quiz_id = ? ORDER BY order_num",
-    args: [quiz_id],
-  });
-  const questions = questionsResult.rows as unknown as QuizQuestion[];
+  const questions = await query<QuizQuestion>(
+    "SELECT * FROM quiz_questions WHERE quiz_id = $1 ORDER BY order_num",
+    [quiz_id]
+  );
 
   if (questions.length === 0) {
     return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
@@ -68,19 +67,17 @@ export async function POST(request: NextRequest) {
   }
 
   const id = crypto.randomUUID();
-  await db.execute({
-    sql: `INSERT OR REPLACE INTO progress (id, user_id, quiz_id, score, total, time_spent_seconds, answers)
-          VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    args: [
-      id,
-      session.userId,
-      quiz_id,
-      score,
-      questions.length,
-      timeSpent,
-      JSON.stringify(answers),
-    ],
-  });
+  await query(
+    `INSERT INTO progress (id, user_id, quiz_id, score, total, time_spent_seconds, answers)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     ON CONFLICT (user_id, quiz_id)
+     DO UPDATE SET score = EXCLUDED.score,
+       total = EXCLUDED.total,
+       time_spent_seconds = EXCLUDED.time_spent_seconds,
+       answers = EXCLUDED.answers,
+       completed_at = now()`,
+    [id, session.userId, quiz_id, score, questions.length, timeSpent, JSON.stringify(answers)]
+  );
 
   return NextResponse.json({
     score,

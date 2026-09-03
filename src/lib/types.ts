@@ -1,13 +1,3 @@
-import { Row } from "@libsql/client";
-
-export function row<T>(row: Row | undefined): T {
-  return row as unknown as T;
-}
-
-export function rows<T>(rows: Row[]): T[] {
-  return rows as unknown as T[];
-}
-
 export interface Course {
   id: string;
   title: string;

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, initDB } from "@/lib/db";
+import { query, initDB } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { Slide } from "@/lib/types";
 
@@ -16,16 +16,14 @@ export async function PUT(
   const { id } = await params;
   const { title, content } = await request.json();
 
-  await db.execute({
-    sql: "UPDATE slides SET title = ?, content = ? WHERE id = ?",
-    args: [title?.trim() || "", (content || "").trim(), id],
-  });
+  await query("UPDATE slides SET title = $1, content = $2 WHERE id = $3", [
+    title?.trim() || "",
+    (content || "").trim(),
+    id,
+  ]);
 
-  const result = await db.execute({
-    sql: "SELECT * FROM slides WHERE id = ?",
-    args: [id],
-  });
-  const slide = result.rows[0] as unknown as Slide;
+  const slideRows = await query<Slide>("SELECT * FROM slides WHERE id = $1", [id]);
+  const slide = slideRows[0];
 
   return NextResponse.json(slide);
 }
@@ -43,26 +41,8 @@ export async function DELETE(
   const { id } = await params;
 
   try {
-    const quiz = await db
-      .execute({ sql: "SELECT id FROM quizzes WHERE slide_id = ?", args: [id] })
-      .then((r) => r.rows[0]);
-
-    if (quiz) {
-      await db.execute({
-        sql: "DELETE FROM progress WHERE quiz_id = ?",
-        args: [quiz.id],
-      });
-      await db.execute({
-        sql: "DELETE FROM quiz_questions WHERE quiz_id = ?",
-        args: [quiz.id],
-      });
-      await db.execute({
-        sql: "DELETE FROM quizzes WHERE id = ?",
-        args: [quiz.id],
-      });
-    }
-
-    await db.execute({ sql: "DELETE FROM slides WHERE id = ?", args: [id] });
+    // FK cascades remove the quiz, its questions and progress rows.
+    await query("DELETE FROM slides WHERE id = $1", [id]);
 
     return NextResponse.json({ success: true });
   } catch (err) {

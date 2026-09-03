@@ -1,13 +1,34 @@
-import { createClient } from "@libsql/client";
+import { Pool, type PoolClient, type QueryResultRow } from "pg";
 
-const tursoUrl = process.env.TURSO_DATABASE_URL;
-const tursoAuthToken = process.env.TURSO_AUTH_TOKEN;
+const connectionString =
+  process.env.DATABASE_URL || "postgres://localhost:5432/studypack";
 
-const client = tursoUrl
-  ? createClient({ url: tursoUrl, authToken: tursoAuthToken })
-  : createClient({ url: "file:local.db" });
+export const pool = new Pool({ connectionString, max: 10 });
 
-export const db = client;
+export async function query<T extends QueryResultRow = QueryResultRow>(
+  sql: string,
+  params: unknown[] = []
+): Promise<T[]> {
+  const result = await pool.query<T>(sql, params);
+  return result.rows;
+}
+
+export async function transaction<T>(
+  fn: (client: PoolClient) => Promise<T>
+): Promise<T> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const out = await fn(client);
+    await client.query("COMMIT");
+    return out;
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+}
 
 let initPromise: Promise<void> | null = null;
 
@@ -15,76 +36,69 @@ export async function initDB() {
   if (initPromise) return initPromise;
 
   initPromise = (async () => {
-    await db.execute("PRAGMA foreign_keys = ON");
-
-    const exists = await db.execute(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name='courses'"
-    );
-    if (exists.rows.length > 0) return;
-
-    await db.execute(`
+    await query(`
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
         username TEXT UNIQUE NOT NULL,
-        role TEXT DEFAULT 'user' CHECK(role IN ('admin', 'user')),
-        created_at TEXT DEFAULT (datetime('now'))
+        role TEXT NOT NULL DEFAULT 'user' CHECK(role IN ('admin', 'user')),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
       )
     `);
 
-    await db.execute(`
+    await query(`
       CREATE TABLE IF NOT EXISTS courses (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
-        description TEXT DEFAULT '',
+        description TEXT NOT NULL DEFAULT '',
         created_by TEXT REFERENCES users(id),
-        created_at TEXT DEFAULT (datetime('now')),
-        updated_at TEXT DEFAULT (datetime('now'))
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
       )
     `);
 
-    await db.execute(`
+    await query(`
       CREATE TABLE IF NOT EXISTS slides (
         id TEXT PRIMARY KEY,
-        course_id TEXT REFERENCES courses(id) ON DELETE CASCADE,
+        course_id TEXT NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
         title TEXT NOT NULL,
-        content TEXT DEFAULT '',
+        content TEXT NOT NULL DEFAULT '',
         order_num INTEGER NOT NULL,
-        created_at TEXT DEFAULT (datetime('now'))
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
       )
     `);
 
-    await db.execute(`
+    await query(`
       CREATE TABLE IF NOT EXISTS quizzes (
         id TEXT PRIMARY KEY,
-        slide_id TEXT UNIQUE REFERENCES slides(id) ON DELETE CASCADE,
+        slide_id TEXT UNIQUE NOT NULL REFERENCES slides(id) ON DELETE CASCADE,
         time_limit_seconds INTEGER DEFAULT 300,
-        created_at TEXT DEFAULT (datetime('now'))
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
       )
     `);
 
-    await db.execute(`
+    await query(`
       CREATE TABLE IF NOT EXISTS quiz_questions (
         id TEXT PRIMARY KEY,
-        quiz_id TEXT REFERENCES quizzes(id) ON DELETE CASCADE,
+        quiz_id TEXT NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
         question_text TEXT NOT NULL,
         options TEXT NOT NULL,
         correct_answer TEXT NOT NULL,
-        explanation TEXT DEFAULT '',
+        explanation TEXT NOT NULL DEFAULT '',
         order_num INTEGER NOT NULL,
-        created_at TEXT DEFAULT (datetime('now'))
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
       )
     `);
 
-    await db.execute(`
+    await query(`
       CREATE TABLE IF NOT EXISTS progress (
         id TEXT PRIMARY KEY,
         user_id TEXT REFERENCES users(id),
-        quiz_id TEXT REFERENCES quizzes(id) ON DELETE CASCADE,
+        quiz_id TEXT NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
         score INTEGER DEFAULT 0,
         total INTEGER DEFAULT 0,
         time_spent_seconds INTEGER DEFAULT 0,
-        answers TEXT DEFAULT '[]',
-        completed_at TEXT DEFAULT (datetime('now')),
+        answers TEXT NOT NULL DEFAULT '[]',
+        completed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
         UNIQUE(user_id, quiz_id)
       )
     `);

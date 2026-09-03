@@ -14,7 +14,7 @@ function getSecret(): Uint8Array {
 
 const publicPaths = ["/login", "/api/auth/login", "/api/agent"];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (publicPaths.some((p) => pathname.startsWith(p))) {

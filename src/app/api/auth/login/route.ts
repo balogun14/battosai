@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, initDB } from "@/lib/db";
+import { query, initDB } from "@/lib/db";
 import { createSession } from "@/lib/auth";
 import { User } from "@/lib/types";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error("DB init failed:", err);
     return NextResponse.json(
-      { error: "Database connection failed. Is TURSO_DATABASE_URL set?" },
+      { error: "Database connection failed. Is DATABASE_URL set?" },
       { status: 500 }
     );
   }
@@ -53,11 +53,11 @@ export async function POST(request: NextRequest) {
   const cleanUsername = username.trim().toLowerCase();
 
   try {
-    const result = await db.execute({
-      sql: "SELECT * FROM users WHERE username = ?",
-      args: [cleanUsername],
-    });
-    let user = result.rows[0] as unknown as User | undefined;
+    const users = await query<User>(
+      "SELECT * FROM users WHERE username = $1",
+      [cleanUsername]
+    );
+    let user = users[0];
 
     if (!user) {
       const id = crypto.randomUUID();
@@ -66,10 +66,11 @@ export async function POST(request: NextRequest) {
           ? "admin"
           : "user";
 
-      await db.execute({
-        sql: "INSERT INTO users (id, username, role) VALUES (?, ?, ?)",
-        args: [id, cleanUsername, role],
-      });
+      await query("INSERT INTO users (id, username, role) VALUES ($1, $2, $3)", [
+        id,
+        cleanUsername,
+        role,
+      ]);
 
       user = { id, username: cleanUsername, role, created_at: "" };
     }

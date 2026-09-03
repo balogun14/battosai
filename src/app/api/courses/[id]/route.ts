@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, initDB } from "@/lib/db";
+import { query, initDB } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { Course, Slide } from "@/lib/types";
 
@@ -10,21 +10,17 @@ export async function GET(
   await initDB();
   const { id } = await params;
 
-  const courseResult = await db.execute({
-    sql: "SELECT * FROM courses WHERE id = ?",
-    args: [id],
-  });
-  const course = courseResult.rows[0] as unknown as Course | undefined;
+  const courseRows = await query<Course>("SELECT * FROM courses WHERE id = $1", [id]);
+  const course = courseRows[0];
 
   if (!course) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const slidesResult = await db.execute({
-    sql: "SELECT * FROM slides WHERE course_id = ? ORDER BY order_num",
-    args: [id],
-  });
-  const slides = slidesResult.rows as unknown as Slide[];
+  const slides = await query<Slide>(
+    "SELECT * FROM slides WHERE course_id = $1 ORDER BY order_num",
+    [id]
+  );
 
   const session = await getSession();
 
@@ -48,16 +44,13 @@ export async function PUT(
   const { id } = await params;
   const { title, description } = await request.json();
 
-  await db.execute({
-    sql: "UPDATE courses SET title = ?, description = ?, updated_at = datetime('now') WHERE id = ?",
-    args: [title?.trim() || "", (description || "").trim(), id],
-  });
+  await query(
+    "UPDATE courses SET title = $1, description = $2, updated_at = now() WHERE id = $3",
+    [title?.trim() || "", (description || "").trim(), id]
+  );
 
-  const result = await db.execute({
-    sql: "SELECT * FROM courses WHERE id = ?",
-    args: [id],
-  });
-  const course = result.rows[0] as unknown as Course;
+  const courseRows = await query<Course>("SELECT * FROM courses WHERE id = $1", [id]);
+  const course = courseRows[0];
 
   return NextResponse.json(course);
 }
@@ -75,36 +68,8 @@ export async function DELETE(
   const { id } = await params;
 
   try {
-    const slides = await db
-      .execute({ sql: "SELECT id FROM slides WHERE course_id = ?", args: [id] })
-      .then((r) => r.rows);
-
-    for (const slide of slides) {
-      const quiz = await db
-        .execute({ sql: "SELECT id FROM quizzes WHERE slide_id = ?", args: [slide.id] })
-        .then((r) => r.rows[0]);
-
-      if (quiz) {
-        await db.execute({
-          sql: "DELETE FROM progress WHERE quiz_id = ?",
-          args: [quiz.id],
-        });
-        await db.execute({
-          sql: "DELETE FROM quiz_questions WHERE quiz_id = ?",
-          args: [quiz.id],
-        });
-        await db.execute({
-          sql: "DELETE FROM quizzes WHERE id = ?",
-          args: [quiz.id],
-        });
-      }
-      await db.execute({
-        sql: "DELETE FROM slides WHERE id = ?",
-        args: [slide.id],
-      });
-    }
-
-    await db.execute({ sql: "DELETE FROM courses WHERE id = ?", args: [id] });
+    // FK cascades remove slides -> quizzes -> questions -> progress.
+    await query("DELETE FROM courses WHERE id = $1", [id]);
 
     return NextResponse.json({ success: true });
   } catch (err) {

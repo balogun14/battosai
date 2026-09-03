@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, initDB } from "@/lib/db";
+import { query, initDB } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { Quiz, QuizQuestion, Progress } from "@/lib/types";
 
@@ -10,21 +10,19 @@ export async function GET(
   await initDB();
   const { id: slideId } = await params;
 
-  const quizResult = await db.execute({
-    sql: "SELECT * FROM quizzes WHERE slide_id = ?",
-    args: [slideId],
-  });
-  const quiz = quizResult.rows[0] as unknown as Quiz | undefined;
+  const quizRows = await query<Quiz>("SELECT * FROM quizzes WHERE slide_id = $1", [
+    slideId,
+  ]);
+  const quiz = quizRows[0];
 
   if (!quiz) {
     return NextResponse.json(null);
   }
 
-  const questionsResult = await db.execute({
-    sql: "SELECT * FROM quiz_questions WHERE quiz_id = ? ORDER BY order_num",
-    args: [quiz.id],
-  });
-  const rawQuestions = questionsResult.rows as unknown as QuizQuestion[];
+  const rawQuestions = await query<QuizQuestion>(
+    "SELECT * FROM quiz_questions WHERE quiz_id = $1 ORDER BY order_num",
+    [quiz.id]
+  );
   const questions = rawQuestions.map((q) => ({
     ...q,
     options: JSON.parse(String(q.options)),
@@ -35,11 +33,11 @@ export async function GET(
 
   let userProgress = null;
   if (session) {
-    const progressResult = await db.execute({
-      sql: "SELECT * FROM progress WHERE user_id = ? AND quiz_id = ?",
-      args: [session.userId, quiz.id],
-    });
-    const raw = progressResult.rows[0] as unknown as Progress | undefined;
+    const progressRows = await query<Progress>(
+      "SELECT * FROM progress WHERE user_id = $1 AND quiz_id = $2",
+      [session.userId, quiz.id]
+    );
+    const raw = progressRows[0];
     if (raw) {
       userProgress = {
         ...raw,
@@ -74,11 +72,10 @@ export async function PUT(
   const { id: slideId } = await params;
   const { time_limit_seconds, questions } = await request.json();
 
-  const quizResult = await db.execute({
-    sql: "SELECT * FROM quizzes WHERE slide_id = ?",
-    args: [slideId],
-  });
-  const quiz = quizResult.rows[0] as unknown as Quiz | undefined;
+  const quizRows = await query<Quiz>("SELECT * FROM quizzes WHERE slide_id = $1", [
+    slideId,
+  ]);
+  const quiz = quizRows[0];
 
   if (!quiz) {
     return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
@@ -87,24 +84,21 @@ export async function PUT(
   const quizId = quiz.id;
 
   if (typeof time_limit_seconds === "number") {
-    await db.execute({
-      sql: "UPDATE quizzes SET time_limit_seconds = ? WHERE id = ?",
-      args: [time_limit_seconds, quizId],
-    });
+    await query("UPDATE quizzes SET time_limit_seconds = $1 WHERE id = $2", [
+      time_limit_seconds,
+      quizId,
+    ]);
   }
 
   if (Array.isArray(questions)) {
-    await db.execute({
-      sql: "DELETE FROM quiz_questions WHERE quiz_id = ?",
-      args: [quizId],
-    });
+    await query("DELETE FROM quiz_questions WHERE quiz_id = $1", [quizId]);
 
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       const qid = crypto.randomUUID();
-      await db.execute({
-        sql: "INSERT INTO quiz_questions (id, quiz_id, question_text, options, correct_answer, explanation, order_num) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        args: [
+      await query(
+        "INSERT INTO quiz_questions (id, quiz_id, question_text, options, correct_answer, explanation, order_num) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+        [
           qid,
           quizId,
           q.question_text,
@@ -112,22 +106,18 @@ export async function PUT(
           q.correct_answer,
           q.explanation || "",
           i,
-        ],
-      });
+        ]
+      );
     }
   }
 
-  const updatedResult = await db.execute({
-    sql: "SELECT * FROM quizzes WHERE id = ?",
-    args: [quizId],
-  });
-  const updated = updatedResult.rows[0] as unknown as Quiz;
+  const updatedRows = await query<Quiz>("SELECT * FROM quizzes WHERE id = $1", [quizId]);
+  const updated = updatedRows[0];
 
-  const updatedQResult = await db.execute({
-    sql: "SELECT * FROM quiz_questions WHERE quiz_id = ? ORDER BY order_num",
-    args: [quizId],
-  });
-  const updatedQuestions = updatedQResult.rows as unknown as QuizQuestion[];
+  const updatedQuestions = await query<QuizQuestion>(
+    "SELECT * FROM quiz_questions WHERE quiz_id = $1 ORDER BY order_num",
+    [quizId]
+  );
 
   return NextResponse.json({
     quiz: {

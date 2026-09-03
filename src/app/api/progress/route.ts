@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db, initDB } from "@/lib/db";
+import { query, initDB } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
 export async function GET() {
@@ -9,31 +9,26 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const progressResult = await db.execute({
-    sql: `SELECT p.*, q.slide_id, s.title as slide_title, s.order_num, s.course_id, c.title as course_title
-          FROM progress p
-          JOIN quizzes q ON q.id = p.quiz_id
-          JOIN slides s ON s.id = q.slide_id
-          JOIN courses c ON c.id = s.course_id
-          WHERE p.user_id = ?
-          ORDER BY p.completed_at DESC`,
-    args: [session.userId],
-  });
-  const rawProgress = progressResult.rows;
-
-  const totalQuizzesResult = await db.execute(
-    "SELECT COUNT(*) as count FROM quizzes"
-  );
-  const totalQuizzes = Number(
-    (totalQuizzesResult.rows[0] as unknown as { count: number }).count
+  const rawProgress = await query(
+    `SELECT p.*, q.slide_id, s.title as slide_title, s.order_num, s.course_id, c.title as course_title
+     FROM progress p
+     JOIN quizzes q ON q.id = p.quiz_id
+     JOIN slides s ON s.id = q.slide_id
+     JOIN courses c ON c.id = s.course_id
+     WHERE p.user_id = $1
+     ORDER BY p.completed_at DESC`,
+    [session.userId]
   );
 
-  const totalCoursesResult = await db.execute(
-    "SELECT COUNT(*) as count FROM courses"
+  const totalQuizzesRows = await query<{ count: number }>(
+    "SELECT COUNT(*)::int AS count FROM quizzes"
   );
-  const totalCourses = Number(
-    (totalCoursesResult.rows[0] as unknown as { count: number }).count
+  const totalQuizzes = totalQuizzesRows[0]?.count ?? 0;
+
+  const totalCoursesRows = await query<{ count: number }>(
+    "SELECT COUNT(*)::int AS count FROM courses"
   );
+  const totalCourses = totalCoursesRows[0]?.count ?? 0;
 
   const progress = rawProgress.map(
     (p) =>

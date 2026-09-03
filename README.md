@@ -1,5 +1,22 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Database
+
+The app uses PostgreSQL via `pg`. Set `DATABASE_URL` in `.env.local`, e.g.:
+
+```
+DATABASE_URL=postgres://user:password@localhost:5432/studypack
+```
+
+Tables are created automatically on first request (`CREATE TABLE IF NOT EXISTS` in `src/lib/db.ts`).
+
+To migrate existing data from the old SQLite/Turso database:
+
+```bash
+# optionally point at a Turso DB instead of a local sqlite file
+SQLITE_URL=file:local.db DATABASE_URL=postgres://user:password@localhost:5432/studypack npm run db:migrate
+```
+
 ## Getting Started
 
 First, run the development server:

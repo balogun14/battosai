@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, initDB } from "@/lib/db";
+import { query, initDB } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { Course } from "@/lib/types";
 
@@ -8,10 +8,9 @@ export async function GET() {
   const session = await getSession();
   const role = session?.role;
 
-  const result = await db.execute(
-    "SELECT c.*, COUNT(s.id) as slide_count FROM courses c LEFT JOIN slides s ON s.course_id = c.id GROUP BY c.id ORDER BY c.created_at DESC"
+  const courses = await query<Course>(
+    "SELECT c.*, COUNT(s.id)::int AS slide_count FROM courses c LEFT JOIN slides s ON s.course_id = c.id GROUP BY c.id ORDER BY c.created_at DESC"
   );
-  const courses = result.rows as unknown as Course[];
 
   return NextResponse.json({ courses, isAdmin: role === "admin" });
 }
@@ -46,16 +45,13 @@ export async function POST(request: NextRequest) {
   const cleanDesc = typeof description === "string" ? description.trim().slice(0, 5000) : "";
 
   const id = crypto.randomUUID();
-  await db.execute({
-    sql: "INSERT INTO courses (id, title, description, created_by) VALUES (?, ?, ?, ?)",
-    args: [id, title.trim(), cleanDesc, session.userId],
-  });
+  await query(
+    "INSERT INTO courses (id, title, description, created_by) VALUES ($1, $2, $3, $4)",
+    [id, title.trim(), cleanDesc, session.userId]
+  );
 
-  const result = await db.execute({
-    sql: "SELECT * FROM courses WHERE id = ?",
-    args: [id],
-  });
-  const course = result.rows[0] as unknown as Course;
+  const courses = await query<Course>("SELECT * FROM courses WHERE id = $1", [id]);
+  const course = courses[0];
 
   return NextResponse.json(course, { status: 201 });
 }

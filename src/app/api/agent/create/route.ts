@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, initDB } from "@/lib/db";
+import { query, initDB } from "@/lib/db";
 
 function validateApiKey(request: NextRequest): boolean {
   const apiKey = process.env.AGENT_API_KEY;
@@ -72,10 +72,8 @@ export async function POST(request: NextRequest) {
   let courseId: string;
 
   if (course.id) {
-    const existing = await db
-      .execute({ sql: "SELECT id FROM courses WHERE id = ?", args: [course.id] })
-      .then((r) => r.rows[0]);
-    if (!existing) {
+    const existing = await query("SELECT id FROM courses WHERE id = $1", [course.id]);
+    if (existing.length === 0) {
       return NextResponse.json(
         { error: `Course with id '${course.id}' not found` },
         { status: 404 }
@@ -84,10 +82,10 @@ export async function POST(request: NextRequest) {
     courseId = course.id;
   } else {
     courseId = crypto.randomUUID();
-    await db.execute({
-      sql: "INSERT INTO courses (id, title, description, created_by) VALUES (?, ?, ?, ?)",
-      args: [courseId, courseTitle, courseDesc, null],
-    });
+    await query(
+      "INSERT INTO courses (id, title, description, created_by) VALUES ($1, $2, $3, $4)",
+      [courseId, courseTitle, courseDesc, null]
+    );
   }
 
   const createdSlides: unknown[] = [];
@@ -102,22 +100,22 @@ export async function POST(request: NextRequest) {
     }
 
     const slideId = crypto.randomUUID();
-    await db.execute({
-      sql: "INSERT INTO slides (id, course_id, title, content, order_num) VALUES (?, ?, ?, ?, ?)",
-      args: [
+    await query(
+      "INSERT INTO slides (id, course_id, title, content, order_num) VALUES ($1, $2, $3, $4, $5)",
+      [
         slideId,
         courseId,
         slide.title.trim().slice(0, 200),
         (slide.content || "").trim().slice(0, 10000),
         si,
-      ],
-    });
+      ]
+    );
 
     const quizId = crypto.randomUUID();
-    await db.execute({
-      sql: "INSERT INTO quizzes (id, slide_id, time_limit_seconds) VALUES (?, ?, ?)",
-      args: [quizId, slideId, slide.quiz?.time_limit_seconds || 300],
-    });
+    await query(
+      "INSERT INTO quizzes (id, slide_id, time_limit_seconds) VALUES ($1, $2, $3)",
+      [quizId, slideId, slide.quiz?.time_limit_seconds || 300]
+    );
 
     let questionCount = 0;
     if (slide.quiz?.questions && Array.isArray(slide.quiz.questions)) {
@@ -129,10 +127,10 @@ export async function POST(request: NextRequest) {
         if (!q.correct_answer) continue;
 
         const qid = crypto.randomUUID();
-        await db.execute({
-          sql: `INSERT INTO quiz_questions (id, quiz_id, question_text, options, correct_answer, explanation, order_num)
-                VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          args: [
+        await query(
+          `INSERT INTO quiz_questions (id, quiz_id, question_text, options, correct_answer, explanation, order_num)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [
             qid,
             quizId,
             q.question_text.slice(0, 2000),
@@ -140,8 +138,8 @@ export async function POST(request: NextRequest) {
             String(q.correct_answer).slice(0, 500),
             (q.explanation || "").slice(0, 5000),
             qi,
-          ],
-        });
+          ]
+        );
         questionCount++;
       }
     }

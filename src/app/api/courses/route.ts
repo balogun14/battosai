@@ -9,7 +9,16 @@ export async function GET() {
   const role = session?.role;
 
   const courses = await query<Course>(
-    "SELECT c.*, COUNT(s.id)::int AS slide_count FROM courses c LEFT JOIN slides s ON s.course_id = c.id GROUP BY c.id ORDER BY c.created_at DESC"
+    `SELECT c.*,
+       COUNT(s.id)::int AS slide_count,
+       (SELECT COUNT(*)::int FROM quiz_questions qq
+        JOIN quizzes q2 ON q2.id = qq.quiz_id
+        JOIN slides s2 ON s2.id = q2.slide_id
+        WHERE s2.course_id = c.id) AS question_count
+     FROM courses c
+     LEFT JOIN slides s ON s.course_id = c.id
+     GROUP BY c.id
+     ORDER BY c.created_at DESC`
   );
 
   return NextResponse.json({ courses, isAdmin: role === "admin" });

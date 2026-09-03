@@ -12,12 +12,18 @@ function getSecret(): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
-const publicPaths = ["/login", "/api/auth/login", "/api/agent"];
+const publicPaths = ["/login", "/api/auth/login", "/api/agent", "/join"];
+
+// Kahoot-style players aren't logged in: state polling, joining and
+// answering by game PIN are public; creating/hosting/results stay behind
+// auth. Restricting to 6-digit pins keeps /api/games and results routes
+// protected.
+const publicGameApi = /^\/api\/games\/\d{6}(\/(join|answer))?$/;
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (publicPaths.some((p) => pathname.startsWith(p))) {
+  if (publicPaths.some((p) => pathname.startsWith(p)) || publicGameApi.test(pathname)) {
     return NextResponse.next();
   }
 

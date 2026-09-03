@@ -102,6 +102,50 @@ export async function initDB() {
         UNIQUE(user_id, quiz_id)
       )
     `);
+
+    await query(`
+      CREATE TABLE IF NOT EXISTS games (
+        id TEXT PRIMARY KEY,
+        pin TEXT UNIQUE NOT NULL,
+        course_id TEXT NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+        status TEXT NOT NULL DEFAULT 'lobby'
+          CHECK(status IN ('lobby', 'question', 'reveal', 'leaderboard', 'ended')),
+        current_index INTEGER NOT NULL DEFAULT 0,
+        question_started_at TIMESTAMPTZ,
+        question_time_limit INTEGER NOT NULL DEFAULT 20,
+        questions TEXT NOT NULL DEFAULT '[]',
+        created_by TEXT REFERENCES users(id),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      )
+    `);
+
+    await query(`
+      CREATE TABLE IF NOT EXISTS game_players (
+        id TEXT PRIMARY KEY,
+        game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+        user_id TEXT REFERENCES users(id),
+        nickname TEXT NOT NULL,
+        score INTEGER NOT NULL DEFAULT 0,
+        streak INTEGER NOT NULL DEFAULT 0,
+        joined_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        UNIQUE(game_id, nickname)
+      )
+    `);
+
+    await query(`
+      CREATE TABLE IF NOT EXISTS game_answers (
+        id TEXT PRIMARY KEY,
+        game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+        player_id TEXT NOT NULL REFERENCES game_players(id) ON DELETE CASCADE,
+        question_id TEXT NOT NULL,
+        answer TEXT NOT NULL,
+        is_correct BOOLEAN NOT NULL,
+        points INTEGER NOT NULL DEFAULT 0,
+        time_ms INTEGER,
+        answered_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        UNIQUE(player_id, question_id)
+      )
+    `);
   })();
 
   return initPromise;

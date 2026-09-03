@@ -45,6 +45,18 @@ export default function AdminPage() {
         <h1 className="text-xl sm:text-2xl font-semibold text-zinc-900">Admin</h1>
         <div className="flex items-center gap-2 sm:gap-3">
           <Link
+            href="/admin/games"
+            className="px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors text-zinc-600"
+          >
+            Games
+          </Link>
+          <Link
+            href="/play"
+            className="px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors text-zinc-600"
+          >
+            Host game
+          </Link>
+          <Link
             href="/admin/prompts"
             className="px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors text-zinc-600"
           >

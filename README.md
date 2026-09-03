@@ -1,5 +1,21 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Live game (Kahoot-style)
+
+Host a live quiz game from any course's existing quiz questions:
+
+- **Host**: log in, open `/play`, pick a course and a time limit, create the game, and share the PIN shown on the console.
+- **Players**: open `/join`, enter the PIN and a nickname — no account needed. Answers use Kahoot's colored shape buttons.
+- Games are host-paced: question → reveal (auto-flips when the timer runs out) → scoreboard → next question → final podium.
+- Scoring is speed-based (500–1000 points per correct answer) plus a streak bonus, like Kahoot.
+- Game history and per-question results live under `/admin/games`.
+
+Run the end-to-end game smoke test against a running dev server:
+
+```bash
+node scripts/game-e2e-test.mjs
+```
+
 ## Database
 
 The app uses PostgreSQL via `pg`. Set `DATABASE_URL` in `.env.local`, e.g.:

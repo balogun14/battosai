@@ -52,6 +52,7 @@ export default function Nav() {
           <div className="hidden sm:flex items-center gap-1">
             <Link href="/courses" className={linkClasses("/courses")}>Courses</Link>
             <Link href="/progress" className={linkClasses("/progress")}>Progress</Link>
+            <Link href="/play" className={linkClasses("/play")}>Live game</Link>
             {user.role === "admin" && (
               <Link href="/admin" className={linkClasses("/admin")}>Admin</Link>
             )}
@@ -81,6 +82,7 @@ export default function Nav() {
         <div className="sm:hidden border-t border-zinc-100 bg-white px-4 py-3 space-y-1">
           <Link href="/courses" className={linkClasses("/courses") + " block"}>Courses</Link>
           <Link href="/progress" className={linkClasses("/progress") + " block"}>Progress</Link>
+          <Link href="/play" className={linkClasses("/play") + " block"}>Live game</Link>
           {user.role === "admin" && (
             <Link href="/admin" className={linkClasses("/admin") + " block"}>Admin</Link>
           )}
